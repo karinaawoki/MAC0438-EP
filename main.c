@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+DEFINE SHARED 1
 void *ciclista()
 {
 
