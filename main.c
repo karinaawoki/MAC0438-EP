@@ -2,8 +2,6 @@
 #include <stdin.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <assert.h>
-
 
 void *ciclista()
 {
@@ -14,10 +12,8 @@ int main(int argc, char*argv[])
 {
 	/* d n [v/u] */
 
-
 	int d = argv[1];
 	int n = argv[2];
-
 
 	return 0;
 }
@@ -45,16 +41,8 @@ int corrida(int n)
     	/* Criand threads */
       	result_code = pthread_create(&threads[i], NULL, ciclista, (void *) &thread_args[i]);
       	
-
-      	/* assert(0 == result_code); */
+      	if (result_code != 0)
+      		abort();
    	}
- 
-   	/*// wait for each thread to complete
-   	for (index = 0; index < NUM_THREADS; ++index) {
-    	block until thread 'index' completes
-    	result_code = pthread_join(threads[index], NULL);
-    	printf("In main: thread %d has completed\n", index);
-      	assert(0 == result_code);
-   	}*/
-   	exit(EXIT_SUCCESS);
+
 }
