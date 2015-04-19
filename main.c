@@ -8,7 +8,7 @@
 
 
 /* VARIÁVEIS GLOBAIS */
-sem_t pista, mutex;
+sem_t *pista, mutex;
 int numBikes;
 int *bikesPorPista;
 pthread_barrier_t barrera; 
@@ -20,7 +20,8 @@ void *ciclista();
 
 
 
-int main(int argc, char*argv[]){
+int main(int argc, char*argv[])
+{
   /* d n [v/u] */
 
   int d = atoi(argv[1]);
@@ -45,12 +46,14 @@ void *ciclista()
 
 int iniciaCorrida(int n, int d)
 {
-  int result_code;
   int i, r;
-  pthread_t threads[n];
-  int thread_args[n];
+  pthread_t *threads;
+  int *thread_args;
 
   pthread_barrier_init(&barrera,NULL,n);
+
+  threads = malloc(n*sizeof(pthread_t));
+  thread_args = malloc(n*sizeof(int));
 
   /*Temos zero bikes em cada pista, inicialmente*/
   bikesPorPista = malloc(d*sizeof(int)); 
@@ -63,7 +66,7 @@ int iniciaCorrida(int n, int d)
   pista = malloc(n*sizeof(sem_t));
   for(i = 0; i < n; i++)
   {
-    sem_init(pista[i], SHARED, 4);
+    sem_init(&pista[i], SHARED, 4);
   }
 
 
@@ -72,7 +75,7 @@ int iniciaCorrida(int n, int d)
   {
       while(bikesPorPista[r=((int)rand()%d)] == 4);
       bikesPorPista[r]++;
-      sem_wait(pista[d]);
+      sem_wait(&pista[d]);
   }
 
 
@@ -81,7 +84,8 @@ int iniciaCorrida(int n, int d)
     thread_args[i] = i;
 
     /* Criando n threads */
+    /* pthread_create(thread, atrubuto   , função da thread, argumento passado para ciclista ) */
     if(pthread_create(&threads[i], NULL, ciclista,NULL)) abort();
   }
-  return NULL;
+  return 0;
 }
