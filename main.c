@@ -162,6 +162,7 @@ void *ciclista(void *i)
 int iniciaCorrida(int n, int d)
 {
   int i, r;
+  int *thread_args;
   pthread_barrier_init(&barrera,NULL,n);
   pthread_barrier_init(&barrera2,NULL,n);
 
@@ -170,6 +171,7 @@ int iniciaCorrida(int n, int d)
   bikeDesclassificada = malloc(n*sizeof(int));
   chegada = malloc(n*sizeof(int));
   voltaBike = malloc(n*sizeof(int));
+  thread_args = malloc(n*sizeof(int));
   posicaoBike = malloc(n*sizeof(int));
   /*threads = malloc(n*sizeof(*threads));*/
   bikesPorPista = malloc(d*sizeof(int)); 
@@ -198,6 +200,7 @@ int iniciaCorrida(int n, int d)
       bikeDesclassificada[i] = 0;
       voltaBike[i] = 0;
       chegada[i] = 0;
+      thread_args[i] = i;
 
       while(bikesPorPista[r=((int)rand()%d)] == 0);
       bikesPorPista[r]--;
@@ -209,10 +212,11 @@ int iniciaCorrida(int n, int d)
   /*printf("888\n");*/
   for(i = 0; i < n; i++)
   {
+
     /* Criando n threads */
     /* pthread_create(thread, atrubuto   , função da thread, argumento passado para ciclista ) */
 
-    if(pthread_create(&threads[i], NULL, ciclista, (void *) &i)) 
+    if(pthread_create(&threads[i], NULL, ciclista, (void *) &thread_args[i])) 
       {
         abort();
       }
