@@ -20,6 +20,7 @@ int *bikeDesclassificada;
 int *bikesPorPista;
 int *posicaoBike;
 int *voltaBike;
+int *chegada;
 int tempo;
 int d, n;
 int mudou = 0; /* Ver se alguem já mudou o tamanho da barreira */
@@ -28,7 +29,7 @@ pthread_t threads[50];
 pthread_barrier_t barrera; 
 pthread_barrier_t barrera2; 
 
-sem_t *pista, mutex;
+sem_t *pista, mutex, mutex1, mutex2, mutex3, mutex4;
 
 
 
@@ -37,6 +38,7 @@ sem_t *pista, mutex;
 int iniciaCorrida(int n, int d);
 void *ciclista(void *i);
 int chanceQuebra(int numBike);
+void mataProcesso(int num);
 
 
 
@@ -78,15 +80,8 @@ void *ciclista(void *i)
     if(chanceQuebra(num))
     {
       /*pthread_kill(threads[num], 0);*/
-      printf("morreu o %d\n",num);
-      sem_wait(&mutex);
-      numBikes--;
-      sem_post(&mutex);
-
-      sem_post(&pista[posicaoBike[num]]);
-      bikeDesclassificada[num] = 1;
-      bikesPorPista[posicaoBike[num]]++;
-      morreu = 1;
+        mataProcesso(num);
+        morreu = 1;
     }
 
     sem_post(&pista[posicaoBike[num]]);
@@ -96,9 +91,23 @@ void *ciclista(void *i)
     posicaoBike[num] = (posicaoBike[num]+1)%d;
     bikesPorPista[posicaoBike[num]]++;
     sem_post(&mutex);
-    if(posicaoBike[num]==0)
+
+
+    if(posicaoBike[num]==0 && morreu == 0)
     {
+        printf("LALALALALLALAALALALALALALALALALA\n");
       voltaBike[num]++;
+
+      sem_wait(&mutex1);
+      chegada[voltaBike[num]-1]++;
+      /* A volta começa no 1 */
+      if(chegada[voltaBike[num]-1] == numBikes)
+      {
+        printf("morreeeeeeeeeeu------\n");
+        morreu = 1;
+        mataProcesso(num);
+      }
+      sem_post(&mutex1);
     }
     sem_wait(&pista[posicaoBike[num]]);
 
@@ -107,7 +116,7 @@ void *ciclista(void *i)
     printf("BARREIRAAAAA-------------\n");
     
 
-    sem_wait(&mutex);
+    sem_wait(&mutex2);
     if(mudou == numBikes)
     {
       pthread_barrier_destroy(&barrera);
@@ -119,14 +128,14 @@ void *ciclista(void *i)
     {
       mudou++;
     }
-    sem_post(&mutex);
+    sem_post(&mutex2);
 
     /* BARREIRA 2 */
     printf("oieeee barrera 2 %d\n", num);
     pthread_barrier_wait(&barrera2);
     printf("BARREIRAAAAA 2-------------\n");
 
-    sem_wait(&mutex);
+    sem_wait(&mutex3);
     if(mudou == numBikes)
     {
       tempo++;
@@ -138,7 +147,7 @@ void *ciclista(void *i)
     {
       mudou++;
     }
-    sem_post(&mutex);
+    sem_post(&mutex3);
 
     if(morreu)
       pthread_exit(NULL);
@@ -162,6 +171,7 @@ int iniciaCorrida(int n, int d)
   numBikes = n;
 
   bikeDesclassificada = malloc(n*sizeof(int));
+  chegada = malloc(n*sizeof(int));
   voltaBike = malloc(n*sizeof(int));
   posicaoBike = malloc(n*sizeof(int));
   /*threads = malloc(n*sizeof(*threads));*/
@@ -169,6 +179,10 @@ int iniciaCorrida(int n, int d)
   pista = malloc(n*sizeof(sem_t));
 
   sem_init(&mutex, SHARED, 1);
+  sem_init(&mutex1, SHARED, 1);
+  sem_init(&mutex2, SHARED, 1);
+  sem_init(&mutex3, SHARED, 1);
+  sem_init(&mutex4, SHARED, 1);
 
   for(i = 0; i < d; i++)
   {
@@ -185,6 +199,7 @@ int iniciaCorrida(int n, int d)
       /* Todas as bikes estão rodando inicialmente */
       bikeDesclassificada[i] = 0;
       voltaBike[i] = 0;
+      chegada[i] = 0;
 
       while(bikesPorPista[r=((int)rand()%d)] == 0);
       bikesPorPista[r]--;
@@ -224,4 +239,19 @@ int chanceQuebra(int numBike)
         return 1;
   }
   return 0;
+}
+
+
+
+void mataProcesso(int num)
+{
+     printf("morreu o %d\n",num);
+      sem_wait(&mutex4);
+      numBikes--;
+      bikesPorPista[posicaoBike[num]]++;
+      sem_post(&mutex4);
+
+      sem_post(&pista[posicaoBike[num]]);
+      bikeDesclassificada[num] = 1;
+      
 }
