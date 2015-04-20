@@ -1,6 +1,7 @@
 #define _XOPEN_SOURCE 600
 #define SHARED 1
 #define DEBUG  1
+#define SEED   154
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,7 +67,6 @@ void *ciclista(void *i)
 {
   int morreu = 0;
   int num = *((int *) i);
-  printf("oi ciclista %d -- %d -- %d\n", num,numBikes, bikeDesclassificada[num]);
   while(numBikes>1 && bikeDesclassificada[num] == 0)
   {
     printf("passo ciclista %d:  volta %d  --  posição %d \n", num, voltaBike[num], posicaoBike[num]);
@@ -95,7 +95,6 @@ void *ciclista(void *i)
 
     if(posicaoBike[num]==0 && morreu == 0)
     {
-        printf("LALALALALLALAALALALALALALALALALA\n");
       voltaBike[num]++;
 
       sem_wait(&mutex1);
@@ -103,7 +102,7 @@ void *ciclista(void *i)
       /* A volta começa no 1 */
       if(chegada[voltaBike[num]-1] == numBikes)
       {
-        printf("morreeeeeeeeeeu----------------------------\n");
+        printf("morreeeeeeeeeeu---------------------------- %d\n", num);
         morreu = 1;
         mataProcesso(num);
       }
@@ -111,10 +110,10 @@ void *ciclista(void *i)
     }
     sem_wait(&pista[posicaoBike[num]]);
 
-    printf("oieeee barrera %d\n", num);
+    /* BARREIRA 1 */
+    printf("toc toc\n");
     pthread_barrier_wait(&barrera);
-    printf("BARREIRAAAAA-------------\n");
-    
+    printf("pode entrar\n");
 
     sem_wait(&mutex2);
     if(mudou == numBikes)
@@ -131,9 +130,7 @@ void *ciclista(void *i)
     sem_post(&mutex2);
 
     /* BARREIRA 2 */
-    printf("oieeee barrera 2 %d\n", num);
     pthread_barrier_wait(&barrera2);
-    printf("BARREIRAAAAA 2-------------\n");
 
     sem_wait(&mutex3);
     if(mudou == numBikes)
@@ -149,8 +146,8 @@ void *ciclista(void *i)
     }
     sem_post(&mutex3);
 
-    if(morreu)
-      pthread_exit(NULL);
+    /*if(morreu)
+      pthread_exit(NULL);*/
 
 
     
@@ -194,6 +191,7 @@ int iniciaCorrida(int n, int d)
   }
 
   /* LARGADA */
+  srand(SEED);
   for(i = 0; i<n; i++)
   {
       /* Todas as bikes estão rodando inicialmente */
