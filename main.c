@@ -22,10 +22,11 @@ int *posicaoBike;
 int *voltaBike;
 int tempo;
 int d, n;
-int mudou = 0;
+int mudou = 0; /* Ver se alguem já mudou o tamanho da barreira */
 
-pthread_t *threads;
+pthread_t threads[50];
 pthread_barrier_t barrera; 
+pthread_barrier_t barrera2; 
 
 sem_t *pista, mutex;
 
@@ -46,7 +47,6 @@ int chanceQuebra(int numBike);
 int main(int argc, char*argv[])
 {
   /* d n [v/u] */
-
   d = atoi(argv[1]);
   n = atoi(argv[2]);
 
@@ -62,18 +62,23 @@ int main(int argc, char*argv[])
 
 void *ciclista(void *i)
 {
+  int morreu = 0;
   int num = *((int *) i);
-
+  printf("oi ciclista %d -- %d -- %d\n", num,numBikes, bikeDesclassificada[num]);
   while(numBikes>1 && bikeDesclassificada[num] == 0)
   {
-    if(tempo%200==0)
+    printf("passo ciclista %d:  volta %d  --  posição %d \n", num, voltaBike[num], posicaoBike[num]);
+
+    /*if(tempo%200==0)
     {
       printf("ciclista %d:  volta %d  --  posição %d \n", num, voltaBike[num], posicaoBike[num]);
-    }
+    }*/
+    printf("\n\n\n");
     /* Chance de quebrar */
     if(chanceQuebra(num))
     {
       /*pthread_kill(threads[num], 0);*/
+      printf("morreu o %d\n",num);
       sem_wait(&mutex);
       numBikes--;
       sem_post(&mutex);
@@ -81,29 +86,66 @@ void *ciclista(void *i)
       sem_post(&pista[posicaoBike[num]]);
       bikeDesclassificada[num] = 1;
       bikesPorPista[posicaoBike[num]]++;
-      pthread_exit(NULL);
+      morreu = 1;
     }
 
-    pthread_barrier_wait(&barrera);
-    
+    sem_post(&pista[posicaoBike[num]]);
+
     sem_wait(&mutex);
-    if(mudou == 0)
+    bikesPorPista[posicaoBike[num]]--;
+    posicaoBike[num] = (posicaoBike[num]+1)%d;
+    bikesPorPista[posicaoBike[num]]++;
+    sem_post(&mutex);
+    if(posicaoBike[num]==0)
     {
-      pthread_barrier_init(&barrera, NULL, numBikes);
-      mudou++;
-      
+      voltaBike[num]++;
     }
-    else if (mudou==numBikes)
+    sem_wait(&pista[posicaoBike[num]]);
+
+    printf("oieeee barrera %d\n", num);
+    pthread_barrier_wait(&barrera);
+    printf("BARREIRAAAAA-------------\n");
+    
+
+    sem_wait(&mutex);
+    if(mudou == numBikes)
     {
+      pthread_barrier_destroy(&barrera);
+      pthread_barrier_init(&barrera, NULL, numBikes);
+      tempo++;
       mudou=0;
     }
     else
     {
-     mudou++;
+      mudou++;
     }
     sem_post(&mutex);
+
+    /* BARREIRA 2 */
+    printf("oieeee barrera 2 %d\n", num);
+    pthread_barrier_wait(&barrera2);
+    printf("BARREIRAAAAA 2-------------\n");
+
+    sem_wait(&mutex);
+    if(mudou == numBikes)
+    {
+      tempo++;
+      pthread_barrier_destroy(&barrera2);
+      pthread_barrier_init(&barrera2, NULL, numBikes);
+      mudou=0;
+    }
+    else
+    {
+      mudou++;
+    }
+    sem_post(&mutex);
+
+    if(morreu)
+      pthread_exit(NULL);
+
+
+    
   }
-  
   return NULL;
 }
 
@@ -113,12 +155,16 @@ void *ciclista(void *i)
 
 int iniciaCorrida(int n, int d)
 {
-  int i, r, *thread_args;
+  int i, r;
   pthread_barrier_init(&barrera,NULL,n);
+  pthread_barrier_init(&barrera2,NULL,n);
+
+  numBikes = n;
 
   bikeDesclassificada = malloc(n*sizeof(int));
-  threads = malloc(n*sizeof(pthread_t));
-  thread_args = malloc(n*sizeof(int));
+  voltaBike = malloc(n*sizeof(int));
+  posicaoBike = malloc(n*sizeof(int));
+  /*threads = malloc(n*sizeof(*threads));*/
   bikesPorPista = malloc(d*sizeof(int)); 
   pista = malloc(n*sizeof(sem_t));
 
@@ -143,18 +189,24 @@ int iniciaCorrida(int n, int d)
       while(bikesPorPista[r=((int)rand()%d)] == 0);
       bikesPorPista[r]--;
       posicaoBike[i] = r;
-      sem_wait(&pista[d]);
+      /*printf("aqui1\n");*/
+      sem_wait(&pista[r]);
+      /*printf("sfsdf\n");*/
   }
+  /*printf("888\n");*/
   for(i = 0; i < n; i++)
   {
-    int *j = malloc(sizeof(*j));
-    thread_args[i] = i;
-    *j = i;
-
     /* Criando n threads */
     /* pthread_create(thread, atrubuto   , função da thread, argumento passado para ciclista ) */
-    if(pthread_create(&threads[i], NULL, ciclista, (void *) j)) abort();
+
+    if(pthread_create(&threads[i], NULL, ciclista, (void *) &i)) 
+      {
+        abort();
+      }
   }
+  for (i = 0; i < n; i++)
+    pthread_join(threads[i], NULL);
+
   return 0;
 }
 
@@ -170,7 +222,6 @@ int chanceQuebra(int numBike)
       return 0;
     else if(voltaBike[numBike]%4 == 0)
         return 1;
-    }
   }
   return 0;
 }
