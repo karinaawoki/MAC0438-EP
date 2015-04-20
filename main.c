@@ -103,7 +103,7 @@ void *ciclista(void *i)
       /* A volta começa no 1 */
       if(chegada[voltaBike[num]-1] == numBikes)
       {
-        printf("morreeeeeeeeeeu------\n");
+        printf("morreeeeeeeeeeu----------------------------\n");
         morreu = 1;
         mataProcesso(num);
       }
