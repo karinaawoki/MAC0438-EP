@@ -1,6 +1,6 @@
 #define _XOPEN_SOURCE 600
 #define SHARED 1
-#define DEBUG  1
+#define DEBUG  0
 #define SEED   154
 
 #include <stdio.h>
@@ -67,14 +67,15 @@ void *ciclista(void *i)
 {
   int morreu = 0;
   int num = *((int *) i);
-  while(numBikes>1 && bikeDesclassificada[num] == 0)
+  while(numBikes>1)
   {
     printf("passo ciclista %d:  volta %d  --  posição %d \n", num, voltaBike[num], posicaoBike[num]);
 
-    /*if(tempo%200==0)
+    if(tempo%200==0 && DEBUG)
     {
       printf("ciclista %d:  volta %d  --  posição %d \n", num, voltaBike[num], posicaoBike[num]);
-    }*/
+    }
+
     printf("\n\n\n");
     /* Chance de quebrar */
     if(chanceQuebra(num))
@@ -97,6 +98,7 @@ void *ciclista(void *i)
     {
       voltaBike[num]++;
 
+
       sem_wait(&mutex1);
       chegada[voltaBike[num]-1]++;
       /* A volta começa no 1 */
@@ -107,6 +109,8 @@ void *ciclista(void *i)
         mataProcesso(num);
       }
       sem_post(&mutex1);
+
+
     }
     sem_wait(&pista[posicaoBike[num]]);
 
@@ -116,26 +120,32 @@ void *ciclista(void *i)
     printf("pode entrar\n");
 
     sem_wait(&mutex2);
-    if(mudou == numBikes)
+    if(mudou == numBikes+morreu)
     {
       pthread_barrier_destroy(&barrera);
       pthread_barrier_init(&barrera, NULL, numBikes);
       tempo++;
       mudou=0;
     }
-    else
+    else if(mudou>numBikes)
+    {
+        printf("ERROOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
+    }
+    else 
     {
       mudou++;
     }
     sem_post(&mutex2);
 
     /* BARREIRA 2 */
+    printf("toc toc   2\n");
     pthread_barrier_wait(&barrera2);
-
+    printf("****************************Ovalor é zerto %d\n", mudou);
+    printf("numbikes = %d\n", numBikes);
+    printf("pode entrar  2\n");
     sem_wait(&mutex3);
     if(mudou == numBikes)
     {
-      tempo++;
       pthread_barrier_destroy(&barrera2);
       pthread_barrier_init(&barrera2, NULL, numBikes);
       mudou=0;
@@ -146,8 +156,8 @@ void *ciclista(void *i)
     }
     sem_post(&mutex3);
 
-    /*if(morreu)
-      pthread_exit(NULL);*/
+    if(morreu)
+      pthread_exit(NULL);
 
 
     
@@ -175,7 +185,7 @@ int iniciaCorrida(int n, int d)
   posicaoBike = malloc(n*sizeof(int));
   /*threads = malloc(n*sizeof(*threads));*/
   bikesPorPista = malloc(d*sizeof(int)); 
-  pista = malloc(n*sizeof(sem_t));
+  pista = malloc(d*sizeof(sem_t));
 
   sem_init(&mutex, SHARED, 1);
   sem_init(&mutex1, SHARED, 1);
