@@ -25,12 +25,13 @@ int *chegada;
 int tempo;
 int d, n;
 int mudou = 0; /* Ver se alguem já mudou o tamanho da barreira */
+int morreu;
 
 pthread_t threads[50];
 pthread_barrier_t barrera; 
 pthread_barrier_t barrera2; 
 
-sem_t *pista, mutex, mutex1, mutex2, mutex3, mutex4;
+sem_t *pista, mutex, mutex1, mutex2, mutex3, mutex4, mutex5;
 
 
 
@@ -65,10 +66,11 @@ int main(int argc, char*argv[])
 
 void *ciclista(void *i)
 {
-  int morreu = 0;
+  int morreu1 = 0;
   int num = *((int *) i);
   while(numBikes>1)
   {
+    printf("numbikesANTES %d\n", numBikes);
     printf("passo ciclista %d:  volta %d  --  posição %d \n", num, voltaBike[num], posicaoBike[num]);
 
     if(tempo%200==0 && DEBUG)
@@ -82,7 +84,10 @@ void *ciclista(void *i)
     {
       /*pthread_kill(threads[num], 0);*/
         mataProcesso(num);
-        morreu = 1;
+        sem_wait(&mutex5);
+        morreu++;
+        sem_post(&mutex5);
+        morreu1=1;   
     }
 
     sem_post(&pista[posicaoBike[num]]);
@@ -94,7 +99,7 @@ void *ciclista(void *i)
     sem_post(&mutex);
 
 
-    if(posicaoBike[num]==0 && morreu == 0)
+    if(posicaoBike[num]==0 && morreu1 == 0)
     {
       voltaBike[num]++;
 
@@ -104,9 +109,12 @@ void *ciclista(void *i)
       /* A volta começa no 1 */
       if(chegada[voltaBike[num]-1] == numBikes)
       {
-        printf("morreeeeeeeeeeu---------------------------- %d\n", num);
-        morreu = 1;
+        printf("morreeeeeeeeeeu-------------------------------------------------------------- %d\n", num);
+        sem_wait(&mutex5);
+        morreu++;
+        sem_post(&mutex5);
         mataProcesso(num);
+        morreu1=1;
       }
       sem_post(&mutex1);
 
@@ -120,7 +128,8 @@ void *ciclista(void *i)
     printf("pode entrar\n");
 
     sem_wait(&mutex2);
-    if(mudou == numBikes+morreu)
+    printf("morreuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu %d\n", morreu);
+    if(mudou == numBikes+morreu-1)
     {
       pthread_barrier_destroy(&barrera);
       pthread_barrier_init(&barrera, NULL, numBikes);
@@ -144,11 +153,12 @@ void *ciclista(void *i)
     printf("numbikes = %d\n", numBikes);
     printf("pode entrar  2\n");
     sem_wait(&mutex3);
-    if(mudou == numBikes)
+    if(mudou == numBikes+morreu-1)
     {
       pthread_barrier_destroy(&barrera2);
       pthread_barrier_init(&barrera2, NULL, numBikes);
       mudou=0;
+      morreu = 0;
     }
     else
     {
@@ -156,7 +166,7 @@ void *ciclista(void *i)
     }
     sem_post(&mutex3);
 
-    if(morreu)
+    if(morreu1)
       pthread_exit(NULL);
 
 
@@ -192,6 +202,7 @@ int iniciaCorrida(int n, int d)
   sem_init(&mutex2, SHARED, 1);
   sem_init(&mutex3, SHARED, 1);
   sem_init(&mutex4, SHARED, 1);
+  sem_init(&mutex5, SHARED, 1);
 
   for(i = 0; i < d; i++)
   {
