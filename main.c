@@ -111,7 +111,6 @@ void *ciclista(void *i)
                 /* A volta começa no 1 */
                 if(chegada[voltaBike[num]-1] == numBikes)
                 {
-                    printf("morreeeeeeeeeeu---------------------------------------- %d\n", num);
                     sem_wait(&mutex5);
                     mataProcesso(num);
                     morreu++;
@@ -126,16 +125,11 @@ void *ciclista(void *i)
          BARREIRA 1 --------------------------
         --------------------------------------
         -------------------------------------*/
-        printf("toc toc - proc %d\n", num);
         pthread_barrier_wait(&barrera);
-        printf("pode entrar  - proc %d\n", num);
 
         sem_wait(&mutex2);  
-            printf("morreuuuuuuuuuuuuuuuuuuuuu %d  - proc %d\n", morreu, num);
-
             if(mudou == numBikes-1)
             {
-                printf("OBRI <3GATÓRIO <3\n");
                 pthread_barrier_destroy(&barrera);
                 
                 tempo++;
@@ -156,11 +150,7 @@ void *ciclista(void *i)
          BARREIRA 2 
         ---------------------------------------------
         --------------------------------------------*/
-        printf("toc toc   2  -   - proc %d\n", num);
         pthread_barrier_wait(&barrera2);
-        printf("****************************Ovalor é zerto %d\n", mudou);
-        printf("numbikes = %d\n", numBikes);
-        printf("pode entrar  2  -  - proc %d\n", num);
         sem_wait(&mutex3);
             if(mudou == numBikesAntes[num]-1)
             {
@@ -173,8 +163,7 @@ void *ciclista(void *i)
                 mudou++;
             }
         sem_post(&mutex3);
-        printf("****************************Ovalor é zero? -- %d  - numbantes %d\n", mudou, numBikesAntes[num]);
-        printf("chegou proc%d\n", num );
+
 
         if(morreu1)
           pthread_exit(NULL);
