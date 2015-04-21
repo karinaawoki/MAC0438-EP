@@ -5,14 +5,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <pthread.h>
 #include <semaphore.h>
 
 /*sem_wait = p
   sem_post = v  */
-
-
-
 
 
 /* VARIÁVEIS GLOBAIS */
@@ -30,17 +28,13 @@ int desclassificados; /* Variavel que conta o numero de desclassificados totais 
 /*Pra parte 2*/
 int *velocidadeBike; /*Marca 1 se o ciclista i está a 50 km/h e 0 caso esteja a 25 km/h */
 int *meiaPosicao; /*Marca se o ciclista i está "ocupando" meia posição a frente da sua posicaoBike */
+int aleatorio = 0;
 /**************/
 
-
-
 pthread_t *threads;
-pthread_barrier_t barrera; 
-pthread_barrier_t barrera2; 
+pthread_barrier_t barreira,barreira2; 
 
 sem_t *pista, mutex, mutex1, mutex2, mutex3, mutex4, mutex5;
-
-
 
 
 /* FUNÇÕES */
@@ -48,27 +42,29 @@ int iniciaCorrida(int n, int d);
 void *ciclista(void *i);
 int chanceQuebra(int numBike);
 void mataProcesso(int num);
-
-
-
-
-
+/**************/
 
 
 int main(int argc, char*argv[])
 {
   /* d n [v/u] */
+  if(argc != 4){
+    printf("Erro! Entrada esperada: ./programa d n u/v\n");
+    return 1;
+  }
+  
   d = atoi(argv[1]);
   n = atoi(argv[2]);
 
+  if(!strcmp(argv[3],"v")) aleatorio = 1;
+
   tempo = 0;
+
 
   iniciaCorrida(n,d);
 
   return 0;
 }
-
-
 
 
 void *ciclista(void *i)
@@ -78,38 +74,57 @@ void *ciclista(void *i)
   int num = *((int *) i);
   while(numBikes>1)
     {
+      if(aleatorio == 1 && voltaBike[num] > 1){ puts("aff"); velocidadeBike[num] = rand()%2;}
 
       if(tempo%200==0 && DEBUG)
         {
 	  printf("ciclista %d:  volta %d  --  posição %d \n", num, voltaBike[num], posicaoBike[num]);
         }
 
-      /*printf("\n\n\n");*/
       
       /* Chance de quebrar */
       if(chanceQuebra(num))
         {
-	  /*pthread_kill(threads[num], 0);*/
 	  sem_wait(&mutex5);
 	  desclassificados++;
 	  mataProcesso(num);
 	  sem_post(&mutex5);
 	  desc=1;   
         }
+      
+      if(velocidadeBike[num] == 1)
+	{
+	  sem_post(&pista[posicaoBike[num]]);
 
-      sem_post(&pista[posicaoBike[num]]);
+	  sem_wait(&mutex);
+	  bikesPorPista[posicaoBike[num]]--;
+	  posicaoBike[num] = (posicaoBike[num]+1)%d;
+	  bikesPorPista[posicaoBike[num]]++;
+	  sem_post(&mutex);
+	  puts("oi");
+	}
+      else
+	{
+	  puts("xau");
+	  if(meiaPosicao[num] == 0) meiaPosicao[num] = 1;
+	  else if(meiaPosicao[num] == 1)
+	    {
+	      sem_post(&pista[posicaoBike[num]]);
 
-      sem_wait(&mutex);
-      bikesPorPista[posicaoBike[num]]--;
-      posicaoBike[num] = (posicaoBike[num]+1)%d;
-      bikesPorPista[posicaoBike[num]]++;
-      sem_post(&mutex);
+	      sem_wait(&mutex);
+	      bikesPorPista[posicaoBike[num]]--;
+	      posicaoBike[num] = (posicaoBike[num]+1)%d;
+	      bikesPorPista[posicaoBike[num]]++;
+	      sem_post(&mutex);
 
+	      meiaPosicao[num] = 0;
+	    }
+	}
+      
 
       if(posicaoBike[num]==0 && desc == 0)
         {
 	  voltaBike[num]++;
-
 
 	  sem_wait(&mutex1);
 	  chegada[voltaBike[num]-1]++;
@@ -130,18 +145,18 @@ void *ciclista(void *i)
 	BARREIRA 1 --------------------------
         --------------------------------------
         -------------------------------------*/
-      pthread_barrier_wait(&barrera);
+      pthread_barrier_wait(&barreira);
 
       sem_wait(&mutex2);  
       if(mudou == numBikes-1)
 	{
-	  pthread_barrier_destroy(&barrera);
+	  pthread_barrier_destroy(&barreira);
                 
 	  tempo++;
 	  mudou=0;
 	  numBikesAntes = numBikes;
-	  numBikes-= desclassificados;
-	  pthread_barrier_init(&barrera, NULL, numBikes);
+	  numBikes -= desclassificados;
+	  pthread_barrier_init(&barreira, NULL, numBikes);
 	  desclassificados = 0;
 	}
       else 
@@ -155,12 +170,12 @@ void *ciclista(void *i)
 	BARREIRA 2 
         ---------------------------------------------
         --------------------------------------------*/
-      pthread_barrier_wait(&barrera2);
+      pthread_barrier_wait(&barreira2);
       sem_wait(&mutex3);
       if(mudou == numBikesAntes-1)
 	{
-	  pthread_barrier_destroy(&barrera2);
-	  pthread_barrier_init(&barrera2, NULL, numBikes);
+	  pthread_barrier_destroy(&barreira2);
+	  pthread_barrier_init(&barreira2, NULL, numBikes);
 	  mudou=0;
 	}
       else
@@ -175,6 +190,7 @@ void *ciclista(void *i)
       printf("passou %d\n", num);
 
       while(mudou!=0) /*printf("tamo aqui\n")*/ ;
+      puts("");
     }
   return NULL;
 }
@@ -187,8 +203,8 @@ int iniciaCorrida(int n, int d)
 {
   int i, r;
   int *thread_args;
-  pthread_barrier_init(&barrera,NULL,n);
-  pthread_barrier_init(&barrera2,NULL,n);
+  pthread_barrier_init(&barreira,NULL,n);
+  pthread_barrier_init(&barreira2,NULL,n);
 
   numBikes = n;
 
@@ -229,7 +245,8 @@ int iniciaCorrida(int n, int d)
       bikeDesclassificada[i] = 0;
       voltaBike[i] = 0;
       chegada[i] = 0;
-      velocidadeBike[i] = 1;
+      if(aleatorio) velocidadeBike[i] = 0;
+      else velocidadeBike[i] = 1;
       meiaPosicao[i] = 0;
       thread_args[i] = i;
 
