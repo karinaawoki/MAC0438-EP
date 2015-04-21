@@ -1,7 +1,7 @@
 #define _XOPEN_SOURCE 600
 #define SHARED 1
 #define DEBUG  1
-#define SEED   154
+#define SEED   155
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +25,12 @@ int *chegada;
 int tempo;
 int d, n;
 int mudou = 0; /* Ver se alguem já mudou o tamanho da barreira */
-int morreu;
+int desclassificados; /* Variavel que conta o numero de desclassificados totais por volta */
+
+/*Pra parte 2*/
+int *velocidadeBike; /*Marca 1 se o ciclista i está a 50 km/h e 0 caso esteja a 25 km/h */
+int *meiaPosicao; /*Marca se o ciclista i está "ocupando" meia posição a frente da sua posicaoBike */
+/**************/
 
 
 
@@ -68,7 +73,7 @@ int main(int argc, char*argv[])
 
 void *ciclista(void *i)
 {
-  int morreu1 = 0;
+  int desc = 0; /*diz se o ciclista i foi desclassificado nessa volta */
   int numBikesAntes;
   int num = *((int *) i);
   while(numBikes>1)
@@ -86,10 +91,10 @@ void *ciclista(void *i)
         {
 	  /*pthread_kill(threads[num], 0);*/
 	  sem_wait(&mutex5);
-	  morreu++;
+	  desclassificados++;
 	  mataProcesso(num);
 	  sem_post(&mutex5);
-	  morreu1=1;   
+	  desc=1;   
         }
 
       sem_post(&pista[posicaoBike[num]]);
@@ -101,7 +106,7 @@ void *ciclista(void *i)
       sem_post(&mutex);
 
 
-      if(posicaoBike[num]==0 && morreu1 == 0)
+      if(posicaoBike[num]==0 && desc == 0)
         {
 	  voltaBike[num]++;
 
@@ -113,9 +118,9 @@ void *ciclista(void *i)
 	    {
 	      sem_wait(&mutex5);
 	      mataProcesso(num);
-	      morreu++;
+	      desclassificados++;
 	      sem_post(&mutex5);
-	      morreu1=1;
+	      desc=1;
 	    }
 	  sem_post(&mutex1);
         }
@@ -135,9 +140,9 @@ void *ciclista(void *i)
 	  tempo++;
 	  mudou=0;
 	  numBikesAntes = numBikes;
-	  numBikes-=morreu;
+	  numBikes-= desclassificados;
 	  pthread_barrier_init(&barrera, NULL, numBikes);
-	  morreu = 0;
+	  desclassificados = 0;
 	}
       else 
 	{
@@ -165,7 +170,7 @@ void *ciclista(void *i)
       sem_post(&mutex3);
 
 
-      if(morreu1)
+      if(desc)
 	pthread_exit(NULL);
       printf("passou %d\n", num);
 
@@ -192,6 +197,8 @@ int iniciaCorrida(int n, int d)
   voltaBike = malloc(n*sizeof(int));
   thread_args = malloc(n*sizeof(int));
   posicaoBike = malloc(n*sizeof(int));
+  velocidadeBike = malloc(n*sizeof(int));
+  meiaPosicao = malloc(n*sizeof(int));
 
   threads = malloc(n*sizeof(pthread_t));
     
@@ -222,9 +229,11 @@ int iniciaCorrida(int n, int d)
       bikeDesclassificada[i] = 0;
       voltaBike[i] = 0;
       chegada[i] = 0;
+      velocidadeBike[i] = 1;
+      meiaPosicao[i] = 0;
       thread_args[i] = i;
 
-      while(bikesPorPista[r=((int)rand()%d)] != 4);
+      while(bikesPorPista[r=((int)rand()%d)] != 4); /*checa se já existe algum ciclista naquela posição */
       bikesPorPista[r]--;
       posicaoBike[i] = r;
       sem_wait(&pista[r]);
@@ -232,16 +241,12 @@ int iniciaCorrida(int n, int d)
       printf("posição inicial %d : %d\n",i,r);
     }
 
-  for(i = 0; i < n; i++)
-    {
-      /* Criando n threads */
-      /* pthread_create(thread, atrubuto   , função da thread, argumento passado para ciclista ) */
-
-      if(pthread_create(&threads[i], NULL, ciclista, (void *) &thread_args[i])) 
-        {
-	  abort();
-        }
-    }
+  for(i = 0; i < n; i++)   
+    /* Criando n threads */
+    if(pthread_create(&threads[i], NULL, ciclista, (void *) &thread_args[i])) abort();
+        
+    
+  
   for (i = 0; i < n; i++)
     pthread_join(threads[i], NULL);
 
