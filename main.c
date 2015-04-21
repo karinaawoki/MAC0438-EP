@@ -27,7 +27,9 @@ int d, n;
 int mudou = 0; /* Ver se alguem já mudou o tamanho da barreira */
 int morreu;
 
-pthread_t threads[50];
+
+
+pthread_t *threads;
 pthread_barrier_t barrera; 
 pthread_barrier_t barrera2; 
 
@@ -190,7 +192,9 @@ int iniciaCorrida(int n, int d)
     voltaBike = malloc(n*sizeof(int));
     thread_args = malloc(n*sizeof(int));
     posicaoBike = malloc(n*sizeof(int));
-    /*threads = malloc(n*sizeof(*threads));*/
+
+    threads = malloc(n*sizeof(pthread_t));
+    
     bikesPorPista = malloc(d*sizeof(int)); 
     pista = malloc(d*sizeof(sem_t));
 
@@ -264,8 +268,5 @@ void mataProcesso(int num)
 {
     printf("morreu o %d\n",num);
     bikesPorPista[posicaoBike[num]]++;
-
-
     sem_post(&pista[posicaoBike[num]]);
-
 }
