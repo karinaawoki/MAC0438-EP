@@ -179,6 +179,8 @@ void *ciclista(void *i)
         if(morreu1)
           pthread_exit(NULL);
         printf("passou %d\n", num);
+
+        while(mudou!=0) /*printf("tamo aqui\n")*/ ;
     }
     return NULL;
 }
