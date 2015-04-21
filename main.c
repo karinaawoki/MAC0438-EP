@@ -93,8 +93,8 @@ void *ciclista(void *i)
             velocidade = ((int)rand())%2;
             /*printf("velocidade %d\n", velocidade);*/
         }
-        /*printf("passo ciclista %d:  volta %d  --  posição %d   velo %d \n", num, voltaBike[num], posicaoBike[num], velocidade);
-*/
+        printf("passo ciclista %d:  volta %d  --  posição %d   velo %d \n", num, voltaBike[num], posicaoBike[num], velocidade);
+
         if(velocidade==0 && estaNaMetade[num] == 1)
         {
             estaNaMetade[num] = 0;
@@ -109,7 +109,7 @@ void *ciclista(void *i)
             sem_post(&mutex6);
             espera = 0;
         }
-
+        printf("iiiiii\n");
         if (velocidade==1)
         {
             sem_wait(&mutex6);
@@ -119,12 +119,15 @@ void *ciclista(void *i)
             sem_post(&mutex6);
             espera = 1;
         }
+        printf("oie\n");
 
         
 
         pthread_barrier_wait(&barrera);
+
+        printf("oooo\n");
         while(contadorEsperas>0)
-        {
+        {printf("contador %d\n", contadorEsperas);
             if(espera)
             {
                 sem_wait(&mutex6);
@@ -176,11 +179,12 @@ void *ciclista(void *i)
             alternaBarreira = (alternaBarreira+1)%2;
 
         }
+        printf("1\n");
         if(alternaBarreira==1)
         {
             pthread_barrier_wait(&barrera2);
         }
-            
+            printf("2\n");
 
         /* Chance de quebrar */
         if(chanceQuebra(num) && numBikes>3)
@@ -299,9 +303,9 @@ int iniciaCorrida(int n, int d)
     estaNaMetade = malloc(n*sizeof(int));
     thread_args = malloc(n*sizeof(int));
     posicaoBike = malloc(n*sizeof(int));
-    parados = malloc(n*sizeof(int));
-    esperando = malloc(n*sizeof(int));
-    livres = malloc(n*sizeof(int));
+    parados = malloc(d*sizeof(int));
+    esperando = malloc(d*sizeof(int));
+    livres = malloc(d*sizeof(int));
 
     threads = malloc(n*sizeof(pthread_t));
     
