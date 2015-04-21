@@ -26,7 +26,6 @@ int tempo;
 int d, n;
 int mudou = 0; /* Ver se alguem já mudou o tamanho da barreira */
 int morreu;
-int *numBikesAntes;
 
 pthread_t threads[50];
 pthread_barrier_t barrera; 
@@ -68,11 +67,10 @@ int main(int argc, char*argv[])
 void *ciclista(void *i)
 {
     int morreu1 = 0;
-    /*int numBikesAntes;*/
+    int numBikesAntes;
     int num = *((int *) i);
     while(numBikes>1)
     {
-        /*numBikesAntes = numBikes;*/
         printf("passo ciclista %d:  volta %d  --  posição %d \n", num, voltaBike[num], posicaoBike[num]);
 
         if(tempo%200==0 && DEBUG)
@@ -134,14 +132,14 @@ void *ciclista(void *i)
                 
                 tempo++;
                 mudou=0;
-                numBikesAntes[num] = numBikes;
+                numBikesAntes = numBikes;
                 numBikes-=morreu;
                 pthread_barrier_init(&barrera, NULL, numBikes);
                 morreu = 0;
             }
             else 
             {
-                numBikesAntes[num] = numBikes;
+                numBikesAntes = numBikes;
                 mudou++;
             }
         sem_post(&mutex2);
@@ -152,7 +150,7 @@ void *ciclista(void *i)
         --------------------------------------------*/
         pthread_barrier_wait(&barrera2);
         sem_wait(&mutex3);
-            if(mudou == numBikesAntes[num]-1)
+            if(mudou == numBikesAntes-1)
             {
                 pthread_barrier_destroy(&barrera2);
                 pthread_barrier_init(&barrera2, NULL, numBikes);
@@ -190,7 +188,6 @@ int iniciaCorrida(int n, int d)
     bikeDesclassificada = malloc(n*sizeof(int));
     chegada = malloc(n*sizeof(int));
     voltaBike = malloc(n*sizeof(int));
-    numBikesAntes = malloc(n*sizeof(int));
     thread_args = malloc(n*sizeof(int));
     posicaoBike = malloc(n*sizeof(int));
     /*threads = malloc(n*sizeof(*threads));*/
