@@ -1,6 +1,6 @@
 #define _XOPEN_SOURCE 600
 #define SHARED 1
-#define DEBUG  1
+#define DEBUG  0
 #define SEED   154
 
 #include <stdio.h>
