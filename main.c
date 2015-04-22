@@ -18,11 +18,11 @@ int *voltaBike; /* diz a volta em que a bike i se encontra */
 int *chegada; /* usado para montar a chegada */
 int tempo; /* variavel usada para mover as bikes */
 int *estaNaMetade; /* indica se a bike moveu meia posição */
-int mudou = 0; /* Indica se alguma thread já alterou o tamanho da barreira */
+int mudou = 0; /* Usado para poder mexer em apenas uma thread */
 int desclassificados; /* numero de bikes desclassificadas na volta atual */
-int *parados; /* indica se alguem "ficou parado" por se mover meia posição */
-int *livres; /* indica posicoes livres */
-int *esperando;/* indica quem ainda esta esperando para serem resolvidos os movimentos */
+int *parados; /* */
+int *livres;  /* */
+int *esperando; /* */
 int contadorEsperas;
 int **ultimosChegada; /* marcas os ultimos de cada chegada*/
 int aleatorio = 0; /* indica se está no modo u ou v */
@@ -70,21 +70,18 @@ int main(int argc, char*argv[])
 
 void *ciclista(void *i)
 {
-  int desc = 0; /*indica se a thread vigente foi desclassificada nessa volta */
+  int desclassificada1 = 0; /*indica se a thread vigente foi desclassificada nessa volta */
   int numBikesAntes;
   int num = *((int *) i);
-  int velocidade = 1; /* indica se o ciclista está a 50 ou 25 km/h */
-  int espera;
+  int velocidade = 1; /* indica se ele vai ou não andar */
+  int espera; /* quem esta na espera */
   int j;
   int alternaBarreira = 1;
   int alteraAlternaBarreira = 1;
 
-  if(numBikes==1) 
-    {
-      voltaBike[num]++;
-    }
   while(numBikes>1)
     {
+      /* Roda cada tempo */
       if(aleatorio == 1)
         {
 	  if(tempo == 0)
@@ -124,6 +121,7 @@ void *ciclista(void *i)
 
 	  while(contadorEsperas>0)
             {
+              /* Se tem alguem esperando */
 	      if(espera)
                 {
 		  sem_wait(&mutex6);
@@ -138,6 +136,7 @@ void *ciclista(void *i)
 		    }
 		  else if(parados[(posicaoBike[num]+1)%d]==4)
 		    {
+          /* Tudo parado em frente */
 		      esperando[posicaoBike[num]]--;
 		      parados[posicaoBike[num]]++;
 		      espera = 0;
@@ -176,6 +175,7 @@ void *ciclista(void *i)
 	      alternaBarreira = (alternaBarreira+1)%2;
 
             }
+            /* Sincroniza barreira */
 	  if(alternaBarreira==1)
             {
 	      pthread_barrier_wait(&barreira2);
@@ -187,7 +187,7 @@ void *ciclista(void *i)
         {
 	  printf("O ciclista %d quebrou! :(   volta: %d   posição: %d\n", num, voltaBike[num], posicaoBike[num]);
 	  mataProcesso(num);
-	  desc=1;   
+	  desclassificada1=1;   
         }
 
       if(velocidade == 1)
@@ -215,7 +215,7 @@ void *ciclista(void *i)
 	      if(chegada[voltaBike[num]-1] == numBikes)
 		{
 		  mataProcesso(num);
-		  desc=1;
+		  desclassificada1=1;
 		  ultimosChegada[voltaBike[num]-1][2] = num;
 		}
 	      else if(chegada[voltaBike[num]-1] == numBikes-1)
@@ -284,7 +284,7 @@ void *ciclista(void *i)
       sem_post(&mutex3);
 
 
-      if(desc) pthread_exit(NULL);
+      if(desclassificada1) pthread_exit(NULL);
 
       while(mudou!=0);
     }
