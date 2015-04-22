@@ -29,6 +29,7 @@ int aleatorio = 0; /* indica se está no modo u ou v */
 int d, n;
 
 
+
 pthread_t *threads;
 pthread_barrier_t barreira,barreira2; 
 
