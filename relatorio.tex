@@ -1,0 +1,347 @@
+\documentclass[10pt,twoside,a4paper]{article}
+
+%packages
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}      % Encoding
+\usepackage[portuguese]{babel}   % Correção
+%\usepackage{caption}             % Legendas
+\usepackage{enumerate}
+
+% Matemática
+\usepackage{amsmath}             % Matemática
+\usepackage{amsthm, amssymb}     % Matemática
+\newtheorem*{def*}{Definição}
+\newtheorem*{invariant}{Invariante}
+
+% Gráficos
+\usepackage[usenames,dvipsnames]{color}  % Cores
+\usepackage[pdftex]{graphicx}   % usamos arquivos pdf/png como figura
+\usepackage[usenames,svgnames,dvipsnames]{xcolor}
+
+% Desenhos
+\usepackage{tikz}
+\usepgfmodule{decorations}
+\usetikzlibrary{patterns}
+\usetikzlibrary{decorations.shapes}
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{decorations.text}
+\usetikzlibrary{positioning} % Adjust grid size
+
+% Código-fonte
+\usepackage[noend]{algpseudocode}
+\usepackage{algorithm}
+
+% Configurações da página
+\usepackage{fancyhdr}           % header & footer
+\usepackage{float}
+\usepackage{setspace}           % espaçamento flexível
+\usepackage{indentfirst}        % Identa primeiro parágrafo
+\usepackage{makeidx}
+\usepackage[nottoc]{tocbibind}  % acrescentamos a  bibliografia/indice/
+                                % conteudo no Table of Contents
+                                
+% Fontes
+%\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{type1cm}            % fontes realmente escaláveis
+\usepackage{titletoc}
+\usepackage{pdflscape}          % Páginas em paisagem
+\usepackage{pdfpages}
+
+% Fontes e margens
+\usepackage[fixlanguage]{babelbib}
+\usepackage[font=small,format=plain,labelfont=bf,up,textfont=it,up]{caption}
+\usepackage[a4paper,top=3.0cm,bottom=3.0cm,left=2.0cm,right=2.0cm]{geometry}
+
+% Referências e citações
+\usepackage[
+    pdftex,
+    breaklinks,
+    plainpages=false,
+    pdfpagelabels,
+    pagebackref,
+    colorlinks=true,
+    citecolor=DarkGreen,
+    linkcolor=DarkBlue,
+    urlcolor=DarkRed,
+    filecolor=green,
+    bookmarksopen=true
+]{hyperref} 
+\usepackage[all]{hypcap} % Soluciona o problema com o hyperref e capitulos
+\usepackage[round,sort,nonamebreak]{natbib} % Citação bibliográfica plainnat-ime
+%\bibpunct{(}{)}{;}{a}{\hspace{-0.7ex},}{,}  % Estilo de citação
+\bibpunct{(}{)}{;}{a}{,}{,}
+
+% Info
+\title{EP1 - MAC0438}
+\author{
+  \begin{tabular}{lr}
+    Karina Suemi Awoki - 7572102 \\
+    Mateus Barros Rodrigues - 7991037
+  \end{tabular}
+}
+\date{}
+
+\begin{document}
+
+\maketitle
+\newpage
+
+\section{Entrada Uniforme}
+Parâmetros: D = 30, N = 14
+\begin{verbatim}
+ciclista 1:  volta 0  --  posição 7 
+ciclista 0:  volta 0  --  posição 13 
+ciclista 2:  volta 0  --  posição 14 
+ciclista 5:  volta 0  --  posição 3 
+ciclista 4:  volta 0  --  posição 5 
+ciclista 3:  volta 0  --  posição 2 
+ciclista 6:  volta 0  --  posição 1 
+ciclista 7:  volta 0  --  posição 4 
+ciclista 8:  volta 0  --  posição 9 
+ciclista 10:  volta 0  --  posição 6 
+ciclista 9:  volta 0  --  posição 10 
+ciclista 11:  volta 0  --  posição 8 
+ciclista 12:  volta 0  --  posição 11 
+ciclista 13:  volta 0  --  posição 12 
+morreu o 6
+morreu o 3
+morreu o 5
+morreu o 7
+morreu o 4
+morreu o 10
+ciclista 1:  volta 6  --  posição 27 
+ciclista 11:  volta 6  --  posição 28 
+ciclista 2:  volta 7  --  posição 4 
+ciclista 12:  volta 7  --  posição 1 
+ciclista 0:  volta 7  --  posição 3 
+ciclista 9:  volta 7  --  posição 0 
+ciclista 8:  volta 6  --  posição 29 
+ciclista 13:  volta 7  --  posição 2 
+morreu o 1
+morreu o 11
+morreu o 8
+morreu o 9
+morreu o 12
+morreu o 13
+morreu o 0
+
+
+ IMPRIMINDO ÚLTIMOS COLOCADOS DE CADA RODADA
+
+1ª VOLTA
+Último colocado: 6
+Penúltimo colocado: 3
+Antepenúltimo colocado: 5
+
+2ª VOLTA
+Último colocado: 3
+Penúltimo colocado: 5
+Antepenúltimo colocado: 7
+
+3ª VOLTA
+Último colocado: 5
+Penúltimo colocado: 7
+Antepenúltimo colocado: 4
+
+4ª VOLTA
+Último colocado: 7
+Penúltimo colocado: 4
+Antepenúltimo colocado: 10
+
+5ª VOLTA
+Último colocado: 4
+Penúltimo colocado: 10
+Antepenúltimo colocado: 1
+
+6ª VOLTA
+Último colocado: 10
+Penúltimo colocado: 1
+Antepenúltimo colocado: 11
+
+7ª VOLTA
+Último colocado: 1
+Penúltimo colocado: 11
+Antepenúltimo colocado: 8
+
+8ª VOLTA
+Último colocado: 11
+Penúltimo colocado: 8
+Antepenúltimo colocado: 9
+
+9ª VOLTA
+Último colocado: 8
+Penúltimo colocado: 9
+Antepenúltimo colocado: 12
+
+10ª VOLTA
+Último colocado: 9
+Penúltimo colocado: 12
+Antepenúltimo colocado: 13
+
+11ª VOLTA
+Último colocado: 12
+Penúltimo colocado: 13
+Antepenúltimo colocado: 0
+
+12ª VOLTA
+Último colocado: 13
+Penúltimo colocado: 0
+Antepenúltimo colocado: 2
+
+13ª VOLTA
+Último colocado: 0
+Penúltimo colocado: 2
+Antepenúltimo colocado: -1
+
+
+ CLASSIFICAÇÃO:
+1º Colocado: 2
+2º Colocado: 0
+3º Colocado: 13
+4º Colocado: 12
+5º Colocado: 9
+6º Colocado: 8
+7º Colocado: 11
+8º Colocado: 1
+9º Colocado: 10
+10º Colocado: 4
+11º Colocado: 7
+12º Colocado: 5
+13º Colocado: 3
+14º Colocado: 6
+\end{verbatim}
+
+\section{Entrada Variada}
+Parâmetros: D = 30, N = 14
+\begin{verbatim}
+ciclista 6:  volta 0  --  posição 0 
+ciclista 1:  volta 0  --  posição 6 
+ciclista 9:  volta 0  --  posição 9 
+ciclista 7:  volta 0  --  posição 3 
+ciclista 10:  volta 0  --  posição 5 
+ciclista 5:  volta 0  --  posição 2 
+ciclista 0:  volta 0  --  posição 12 
+ciclista 13:  volta 0  --  posição 11 
+ciclista 11:  volta 0  --  posição 7 
+ciclista 12:  volta 0  --  posição 10 
+ciclista 4:  volta 0  --  posição 4 
+ciclista 8:  volta 0  --  posição 8 
+ciclista 3:  volta 0  --  posição 1 
+ciclista 2:  volta 0  --  posição 13 
+morreu o 6
+morreu o 5
+morreu o 4
+morreu o 3
+morreu o 1
+ciclista 9:  volta 5  --  posição 9 
+ciclista 0:  volta 5  --  posição 10 
+ciclista 2:  volta 5  --  posição 13 
+ciclista 12:  volta 5  --  posição 15 
+ciclista 11:  volta 5  --  posição 7 
+ciclista 8:  volta 5  --  posição 9 
+ciclista 10:  volta 5  --  posição 5 
+ciclista 13:  volta 5  --  posição 8 
+ciclista 7:  volta 5  --  posição 6 
+morreu o 7
+morreu o 11
+morreu o 13
+morreu o 8
+morreu o 2
+ciclista 9:  volta 10  --  posição 13 
+ciclista 12:  volta 10  --  posição 21 
+ciclista 10:  volta 10  --  posição 8 
+ciclista 0:  volta 10  --  posição 11 
+morreu o 10
+morreu o 0
+morreu o 9
+
+
+ IMPRIMINDO ÚLTIMOS COLOCADOS DE CADA RODADA
+
+1ª VOLTA
+Último colocado: 6
+Penúltimo colocado: 3
+Antepenúltimo colocado: 5
+
+2ª VOLTA
+Último colocado: 5
+Penúltimo colocado: 4
+Antepenúltimo colocado: 3
+
+3ª VOLTA
+Último colocado: 4
+Penúltimo colocado: 3
+Antepenúltimo colocado: 7
+
+4ª VOLTA
+Último colocado: 3
+Penúltimo colocado: 7
+Antepenúltimo colocado: 1
+
+5ª VOLTA
+Último colocado: 1
+Penúltimo colocado: 10
+Antepenúltimo colocado: 7
+
+6ª VOLTA
+Último colocado: 7
+Penúltimo colocado: 11
+Antepenúltimo colocado: 10
+
+7ª VOLTA
+Último colocado: 11
+Penúltimo colocado: 13
+Antepenúltimo colocado: 10
+
+8ª VOLTA
+Último colocado: 13
+Penúltimo colocado: 8
+Antepenúltimo colocado: 2
+
+9ª VOLTA
+Último colocado: 8
+Penúltimo colocado: 2
+Antepenúltimo colocado: 10
+
+10ª VOLTA
+Último colocado: 2
+Penúltimo colocado: 10
+Antepenúltimo colocado: 0
+
+11ª VOLTA
+Último colocado: 10
+Penúltimo colocado: 0
+Antepenúltimo colocado: 9
+
+12ª VOLTA
+Último colocado: 0
+Penúltimo colocado: 9
+Antepenúltimo colocado: 12
+
+13ª VOLTA
+Último colocado: 9
+Penúltimo colocado: 12
+Antepenúltimo colocado: -1
+
+
+ CLASSIFICAÇÃO:
+1º Colocado: 12
+2º Colocado: 9
+3º Colocado: 0
+4º Colocado: 10
+5º Colocado: 2
+6º Colocado: 8
+7º Colocado: 13
+8º Colocado: 11
+9º Colocado: 7
+10º Colocado: 1
+11º Colocado: 3
+12º Colocado: 4
+13º Colocado: 5
+14º Colocado: 6
+\end{verbatim}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
