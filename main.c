@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <string.h>
 
 /*sem_wait = p
   sem_post = v  */
@@ -30,6 +31,8 @@ int *parados;
 int *livres;
 int *esperando;
 int contadorEsperas;
+int **ultimosChegada;
+int aleatorio = 0;
 
 
 
@@ -47,9 +50,7 @@ int iniciaCorrida(int n, int d);
 void *ciclista(void *i);
 int chanceQuebra(int numBike);
 void mataProcesso(int num);
-
-
-
+int compare(const void* a, const void* b);
 
 
 
@@ -60,6 +61,7 @@ int main(int argc, char*argv[])
   d = atoi(argv[1]);
   n = atoi(argv[2]);
 
+  if(!strcmp(argv[3],"v")) aleatorio = 1;
   tempo = 0;
 
   iniciaCorrida(n,d);
@@ -75,109 +77,116 @@ void *ciclista(void *i)
     int morreu1 = 0;
     int numBikesAntes;
     int num = *((int *) i);
-    int velocidade;
+    int velocidade = 1;
     int espera;
     int j;
     int alternaBarreira = 1;
     int alteraAlteraBarreira = 1;
 
+    if(numBikes==1)
+    {
+        voltaBike[num]++;
+    }
     while(numBikes>1)
     {
-
-        if(tempo == 0)
+        if(aleatorio == 1)
         {
-            velocidade = 0;
-        }
-        else
-        {
-            velocidade = ((int)rand())%2;
-            /*printf("velocidade %d\n", velocidade);*/
-        }
-        /*printf("passo ciclista %d:  volta %d  --  posição %d   velo %d \n", num, voltaBike[num], posicaoBike[num], velocidade);
-*/
-        if(velocidade==0 && estaNaMetade[num] == 1)
-        {
-            estaNaMetade[num] = 0;
-            velocidade = 1;
-        }
-        else if(velocidade == 0 && estaNaMetade[num] == 0)
-        {
-            estaNaMetade[num] = 1;
-            sem_wait(&mutex6);
-                parados[posicaoBike[num]]++;
-                livres[posicaoBike[num]]--;
-            sem_post(&mutex6);
-            espera = 0;
-        }
-        if (velocidade==1)
-        {
-            sem_wait(&mutex6);
-                esperando[posicaoBike[num]]++;
-                livres[posicaoBike[num]]--;
-                contadorEsperas++;
-            sem_post(&mutex6);
-            espera = 1;
-        }
-        
-
-        pthread_barrier_wait(&barrera);
-
-        while(contadorEsperas>0)
-        {
-            if(espera)
+            if(tempo == 0)
             {
-                sem_wait(&mutex6);
-                    if(livres[(posicaoBike[num]+1)%d] > 0)
-                    {
-                        /* Tem uma posição da frente livre */
-                        esperando[posicaoBike[num]]--;
-                        livres[posicaoBike[num]]++;
-                        livres[(posicaoBike[num]+1)%d]--;
-                        parados[(posicaoBike[num]+1)%d]++;
-                        espera = 0;
-                    }
-                    else if(parados[(posicaoBike[num]+1)%d]==4)
-                    {
-                        esperando[posicaoBike[num]]--;
-                        parados[posicaoBike[num]]++;
-                        espera = 0;
-                        velocidade = 0;
-                    }
-                    else
-                    {
-                        alteraAlteraBarreira = 0;
-                    }
-                sem_post(&mutex6);    
-            } 
-            if(alternaBarreira == 1)
-            {
-                pthread_barrier_wait(&barrera2);
+                velocidade = 0;
             }
             else
             {
-                pthread_barrier_wait(&barrera);
+                velocidade = ((int)rand())%2;
+                /*printf("velocidade %d\n", velocidade);*/
             }
-            if(alteraAlteraBarreira == 1)
+            /*printf("passo ciclista %d:  volta %d  --  posição %d   velo %d \n", num, voltaBike[num], posicaoBike[num], velocidade);
+    */
+            if(velocidade==0 && estaNaMetade[num] == 1)
             {
+                estaNaMetade[num] = 0;
+                velocidade = 1;
+            }
+            else if(velocidade == 0 && estaNaMetade[num] == 0)
+            {
+                estaNaMetade[num] = 1;
                 sem_wait(&mutex6);
-                contadorEsperas--;
+                    parados[posicaoBike[num]]++;
+                    livres[posicaoBike[num]]--;
                 sem_post(&mutex6);
+                espera = 0;
             }
-            alteraAlteraBarreira = 1;
-            if(alternaBarreira == 1)
+            if (velocidade==1)
+            {
+                sem_wait(&mutex6);
+                    esperando[posicaoBike[num]]++;
+                    livres[posicaoBike[num]]--;
+                    contadorEsperas++;
+                sem_post(&mutex6);
+                espera = 1;
+            }
+            
+
+            pthread_barrier_wait(&barrera);
+
+            while(contadorEsperas>0)
+            {
+                if(espera)
+                {
+                    sem_wait(&mutex6);
+                        if(livres[(posicaoBike[num]+1)%d] > 0)
+                        {
+                            /* Tem uma posição da frente livre */
+                            esperando[posicaoBike[num]]--;
+                            livres[posicaoBike[num]]++;
+                            livres[(posicaoBike[num]+1)%d]--;
+                            parados[(posicaoBike[num]+1)%d]++;
+                            espera = 0;
+                        }
+                        else if(parados[(posicaoBike[num]+1)%d]==4)
+                        {
+                            esperando[posicaoBike[num]]--;
+                            parados[posicaoBike[num]]++;
+                            espera = 0;
+                            velocidade = 0;
+                            estaNaMetade[num] = 1;
+                        }
+                        else
+                        {
+                            alteraAlteraBarreira = 0;
+                        }
+                    sem_post(&mutex6);    
+                } 
+                if(alternaBarreira == 1)
+                {
+                    pthread_barrier_wait(&barrera2);
+                }
+                else
+                {
+                    pthread_barrier_wait(&barrera);
+                }
+                if(alteraAlteraBarreira == 1)
+                {
+                    sem_wait(&mutex6);
+                    contadorEsperas--;
+                    sem_post(&mutex6);
+                }
+                alteraAlteraBarreira = 1;
+                if(alternaBarreira == 1)
+                {
+                    pthread_barrier_wait(&barrera2);
+                }
+                else
+                {
+                    pthread_barrier_wait(&barrera);
+                }
+                alternaBarreira = (alternaBarreira+1)%2;
+
+            }
+            if(alternaBarreira==1)
             {
                 pthread_barrier_wait(&barrera2);
             }
-            else
-            {
-                pthread_barrier_wait(&barrera);
-            }
-            alternaBarreira = (alternaBarreira+1)%2;
-
-        }
-        if(alternaBarreira==1)
-        {
-            pthread_barrier_wait(&barrera2);
         }
 
         /* Chance de quebrar */
@@ -202,7 +211,7 @@ void *ciclista(void *i)
             sem_post(&mutex);
 
 
-            if(posicaoBike[num]==0 && morreu1 == 0)
+            if(posicaoBike[num]==0)
             {
                 voltaBike[num]++;
                 sem_wait(&mutex1);
@@ -212,7 +221,13 @@ void *ciclista(void *i)
                     {
                         mataProcesso(num);
                         morreu1=1;
+                        ultimosChegada[voltaBike[num]-1][2] = num;
                     }
+                    else if(chegada[voltaBike[num]-1] == numBikes-1)
+                        ultimosChegada[voltaBike[num]-1][1] = num;
+                    else if(chegada[voltaBike[num]-1] == numBikes-2)
+                        ultimosChegada[voltaBike[num]-1][0] = num;
+
                 sem_post(&mutex1);
             }
             sem_wait(&pista[posicaoBike[num]]);
@@ -300,6 +315,7 @@ int iniciaCorrida(int n, int d)
     parados = malloc(d*sizeof(int));
     esperando = malloc(d*sizeof(int));
     livres = malloc(d*sizeof(int));
+    ultimosChegada = malloc(n*sizeof(int*));
 
     threads = malloc(n*sizeof(pthread_t));
     
@@ -330,6 +346,11 @@ int iniciaCorrida(int n, int d)
     srand(SEED);
     for(i = 0; i<n; i++)
     {
+        ultimosChegada[i] = malloc(3*sizeof(int));
+        ultimosChegada[i][0] = -1;
+        ultimosChegada[i][1] = -1;
+        ultimosChegada[i][2] = -1;
+
         /* Todas as bikes estão rodando inicialmente */
         voltaBike[i] = 0;
         chegada[i] = 0;
@@ -337,7 +358,7 @@ int iniciaCorrida(int n, int d)
         estaNaMetade[i] = 0;
 
         r=((int)rand()%n);
-        while(bikesPorPista[r] !=4) 
+        while(bikesPorPista[r] !=4)
             r = (r+1)%n;
         bikesPorPista[r]--;
         posicaoBike[i] = r;
@@ -355,11 +376,33 @@ int iniciaCorrida(int n, int d)
     for (i = 0; i < n; i++)
         pthread_join(threads[i], NULL);
 
+
+
+
+    printf("\n\n IMPRIMINDO ÚLTIMOS COLOCADOS DE CADA RODADA\n");
+    for(i = 0; i<n; i++)
+    {
+        if(ultimosChegada[i][2] != -1)
+        {
+            printf("\n%dª VOLTA\n", i+1);
+            printf("Último colocado: %d\n", ultimosChegada[i][2]);
+            printf("Penúltimo colocado: %d\n", ultimosChegada[i][1]);
+            printf("Anti penúltimo colocado: %d\n", ultimosChegada[i][0]);
+        }
+    }
+
+
+    printf("\n\n\n\n\n CLASSIFICAÇÃO:\n");
+
+    for(i = 0; i < n; i++)
+        qsort(thread_args,n,sizeof(int),compare);
+    for(i = 0; i<n; i++)
+    {
+        printf("%dº Colocado: %d\n", i+1, thread_args[n-i-1]);
+    }
+
     return 0;
 }
-
-
-
 
 
 int chanceQuebra(int numBike)
@@ -384,4 +427,14 @@ void mataProcesso(int num)
         bikesPorPista[posicaoBike[num]]++;
     sem_post(&mutex5);
     sem_post(&pista[posicaoBike[num]]);
+}
+
+int compare(const void* a, const void* b){
+  int A = voltaBike[*(int*)a];
+  int B = voltaBike[*(int*)b];
+
+  if(A > B) return 1;
+  if(A < B) return -1;
+  if(A == B && posicaoBike[*(int*) a] > posicaoBike[*(int*) b]) return 1;
+  return -1;
 }
