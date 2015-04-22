@@ -1,0 +1,24 @@
+nomes: Karina Suemi Awoki
+	   Mateus barros Rodrigues
+
+
+
+Para compilar o projeto, basta digitar 
+$ make
+no terminal.
+
+E para executar o programa, basta digitar ./ep d v [v/u]
+
+Para executar em modo DEBUG basta alterar a seguinte linha do programa:
+#define DEBUG 0
+para
+#define DEBUG 1
+(está na linha 3 do main.c)
+
+
+
+Saída:
+* Bicicletas que quebrarem durante a corrida.
+* Avisa quando alguém "morreu" (foi desclassifica por ser o pultimo a completar alguma volta)
+* Últimos 3 colocados de cada volta.
+* Classificação dos competidores.
