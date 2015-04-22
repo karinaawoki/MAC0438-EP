@@ -70,8 +70,6 @@ int main(int argc, char*argv[])
 }
 
 
-
-
 void *ciclista(void *i)
 {
     int morreu1 = 0;
